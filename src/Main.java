@@ -7,6 +7,9 @@ import java.io.IOException;
 public class Main {
     public static void main(String[] args) {
         int validFilesCount = 0;
+        int yandexBotRequests = 0;
+        int googleBotRequests = 0;
+        int totalRequests = 0;
 
         // Бесконечный цикл опроса пути к файлу
         while (true) {
@@ -16,48 +19,77 @@ public class Main {
 
             File file = new File(path); // Создаем объект класса File для проверки существования файла
 
-            if (!file.exists()) {      // Если файл не существует
+            if (!file.exists()) { // Если файл не существует
                 System.out.println("Файл не найден!!!");
-                continue;              // Продолжаем цикл заново
+                continue; // Продолжаем цикл заново
             }
 
-            if (file.isDirectory()) {  // Если путь ведет к директории (папке)
+            if (file.isDirectory()) { // Если путь ведет к директории (папке)
                 System.out.println("Указанный путь ведёт к папке, укажите путь к файлу!!!");
-                continue;              // Продолжаем цикл заново
+                continue; // Продолжаем цикл заново
             }
 
             // Иначе (файл существует и не является директорией):
-            validFilesCount++;       // Увеличиваем счётчик правильно введённых файлов
+            validFilesCount++; // Увеличиваем счётчик правильно введённых файлов
             System.out.println("Путь указан верно");
             System.out.printf("Это файл номер %d\n", validFilesCount); // Выводим номер файла
 
             try (FileReader fileReader = new FileReader(path);
                  BufferedReader reader = new BufferedReader(fileReader)) {
 
-                int countLines = 0;  // Количество строк
-                int maxLength = 0;   // Максимальная длина строки
-                int minLength = Integer.MAX_VALUE; // Минимальная длина строки
-
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    int len = line.length();
+                    totalRequests++;
 
-                    // Проверяем максимальную длину строки
-                    if (len > 1024) {
-                        throw new LongLineException("Встречена строка длиной более 1024 символов.");
+                    // Проверяем длину строки
+                    if (line.length() > 1024) {
+                        throw new LongLineException("Строка длиннее 1024 символов");
                     }
 
-                    // Обновляем минимальное и максимальное значения длины строки
-                    maxLength = Math.max(maxLength, len);
-                    minLength = Math.min(minLength, len);
+                    // Обработка User-Agent
+                    int uaPosition = line.lastIndexOf('"'); // Находим последнее вхождение "
+                    if (uaPosition != -1) {
+                        String userAgent = line.substring(uaPosition + 1, line.length()); // Вырезаем User-Agent
 
-                    countLines++;
+                        // Находим круглые скобки в User-Agent
+                        int startBracketIndex = userAgent.indexOf('(');
+                        int endBracketIndex = userAgent.indexOf(')', startBracketIndex);
+
+                        // Проверяем корректность индексов
+                        if (startBracketIndex != -1 && endBracketIndex != -1 &&
+                                startBracketIndex < endBracketIndex) {
+                            String firstBracketsContent = userAgent.substring(startBracketIndex + 1, endBracketIndex);
+
+                            // Разбираем содержание по точке с запятой
+                            String[] parts = firstBracketsContent.split(";");
+                            if (parts.length >= 2) {
+                                String fragment = parts[1].trim();
+
+                                // Берём фрагмент до "/"
+                                int slashIndex = fragment.indexOf("/");
+                                if (slashIndex != -1) {
+                                    String botType = fragment.substring(0, slashIndex).trim();
+
+                                    // Подсчитываем запросы от YandexBot и Googlebot
+                                    if ("YandexBot".equals(botType)) {
+                                        yandexBotRequests++;
+                                    } else if ("Googlebot".equals(botType)) {
+                                        googleBotRequests++;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                // Выводим статистику по файлу
-                System.out.println("Количество строк в файле: " + countLines);
-                System.out.println("Максимальная длина строки: " + maxLength);
-                System.out.println("Минимальная длина строки: " + minLength);
+                // Выводим долю запросов от YandexBot и Googlebot
+                if (totalRequests > 0) {
+                    double yandexPercentage = (double) yandexBotRequests / totalRequests * 100;
+                    double googlePercentage = (double) googleBotRequests / totalRequests * 100;
+
+                    System.out.printf("Процент запросов от YandexBot: %.2f%%\n", yandexPercentage);
+                    System.out.printf("Процент запросов от Googlebot: %.2f%%\n", googlePercentage);
+                }
 
             } catch (LongLineException e) {
                 System.out.println("Ошибка: " + e.getMessage());
