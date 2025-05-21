@@ -1,21 +1,18 @@
-// #9_Задание 3_Курсовая UserAgent
+// #10_StreamAPI_Задание1_Курсовая UserAgent
 
 import java.util.Locale;
-
-// Класс для анализа строки User-Agent
 
 public class UserAgent {
     private final String osType;
     private final String browser;
+    private final boolean isBot;
 
-    /**
-     * Конструктор разбирает строку User-Agent
-     * @param userAgentString строка User-Agent
-     */
     public UserAgent(String userAgentString) {
+        // Обработка пустого или некорректного User-Agent
         if (userAgentString == null || userAgentString.isEmpty() || "-".equals(userAgentString)) {
             this.osType = "Unknown";
             this.browser = "Unknown";
+            this.isBot = false;
             return;
         }
 
@@ -30,7 +27,7 @@ public class UserAgent {
             this.osType = "Linux";
         } else if (ua.contains("android")) {
             this.osType = "Android";
-        } else if (ua.contains("iPhone") || ua.contains("iPad")) {
+        } else if (ua.contains("iphone") || ua.contains("ipad")) {
             this.osType = "iOS";
         } else {
             this.osType = "Unknown";
@@ -52,6 +49,11 @@ public class UserAgent {
         } else {
             this.browser = "Unknown";
         }
+
+        // Определение бота
+        this.isBot = ua.contains("bot")
+                || userAgentString.contains("YandexBot")
+                || userAgentString.contains("Googlebot");
     }
 
     public String getOsType() {
@@ -60,5 +62,9 @@ public class UserAgent {
 
     public String getBrowser() {
         return browser;
+    }
+
+    public boolean isBot() {
+        return isBot;
     }
 }

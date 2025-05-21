@@ -1,8 +1,9 @@
-// #10_Задание_2_Курсовая Main.java
+// #10_StreamAPI_Задание1_Курсовая Main.java
 
 import java.io.*;
 import java.util.Scanner;
-
+import java.util.HashMap;
+import java.util.HashSet;
 
 
 public class Main {
@@ -78,5 +79,10 @@ public class Main {
         System.out.println("\nДоли браузеров:");
         stats.getBrowserStatistics().forEach((browser, ratio) ->
                 System.out.printf("%s: %.2f%%%n", browser, ratio * 100));
+
+        // Новые метрики подсчета
+        System.out.printf("Среднее посещений в час: %.2f%n", stats.getAverageVisitsPerHour());
+        System.out.printf("Среднее ошибок в час: %.2f%n", stats.getAverageErrorRatePerHour());
+        System.out.printf("Средняя посещаемость на пользователя: %.2f%n", stats.getAverageVisitsPerUser());
     }
 }

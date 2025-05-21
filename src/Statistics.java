@@ -1,9 +1,10 @@
-// #10_Задание_2_Курсовая Statistics
+// #10_StreamAPI_Задание1_Курсовая Statistics
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 public class Statistics {
     private int totalRequests = 0;
@@ -13,14 +14,46 @@ public class Statistics {
     private LocalDateTime minTime = null;
     private LocalDateTime maxTime = null;
 
-    // Для существующих страниц (200)
+    // Поля из предыдущих заданий
     private final HashSet<String> existingPages = new HashSet<>();
-    // Для несуществующих страниц (404)
     private final HashSet<String> nonExistingPages = new HashSet<>();
-    // Для статистики ОС
     private final HashMap<String, Integer> osCounts = new HashMap<>();
-    // Для статистики браузеров
     private final HashMap<String, Integer> browserCounts = new HashMap<>();
+
+    // Новые поля для текущего задания
+    private int humanRequests = 0;          // Посещения без ботов
+    private int errorRequests = 0;          // Ошибки 4xx/5xx
+    private final Set<String> humanIPs = new HashSet<>(); // Уникальные IP не-ботов
+
+    // Методы для страниц
+    public HashSet<String> getExistingPages() {
+        return new HashSet<>(existingPages);
+    }
+
+    public HashSet<String> getNonExistingPages() {
+        return new HashSet<>(nonExistingPages);
+    }
+
+    // Методы для статистики
+    public HashMap<String, Double> getOsStatistics() {
+        HashMap<String, Double> osStats = new HashMap<>();
+        int total = osCounts.values().stream().mapToInt(Integer::intValue).sum();
+        if (total > 0) {
+            osCounts.forEach((os, count) -> osStats.put(os, (double) count / total));
+        }
+        return osStats;
+    }
+
+    public HashMap<String, Double> getBrowserStatistics() {
+        HashMap<String, Double> browserStats = new HashMap<>();
+        int total = browserCounts.values().stream().mapToInt(Integer::intValue).sum();
+        if (total > 0) {
+            browserCounts.forEach((browser, count) ->
+                    browserStats.put(browser, (double) count / total)
+            );
+        }
+        return browserStats;
+    }
 
     public void addEntry(LogEntry entry) {
         totalRequests++;
@@ -49,7 +82,20 @@ public class Statistics {
         String browser = userAgent.getBrowser();
         browserCounts.put(browser, browserCounts.getOrDefault(browser, 0) + 1);
 
-        // Определение ботов
+        // Определение ботов и подсчет человеческих запросов
+        boolean isBot = userAgent.isBot();
+        if (!isBot) {
+            humanRequests++;
+            humanIPs.add(entry.getIp()); // Добавляем IP не-бота
+        }
+
+        // Подсчет ошибок 4xx/5xx
+        int code = entry.getResponseCode();
+        if (code >= 400 && code < 600) {
+            errorRequests++;
+        }
+
+        // Определение ботов (дополнительная проверка для Yandex/Google)
         String ua = entry.getUserAgentString();
         if (ua != null) {
             ua = ua.toLowerCase();
@@ -61,35 +107,30 @@ public class Statistics {
         }
     }
 
-    // Методы для существующих страниц (оставлены без изменений)
-    public HashSet<String> getExistingPages() {
-        return new HashSet<>(existingPages);
+    // Метод 1: Среднее количество посещений в час (без ботов)
+    public double getAverageVisitsPerHour() {
+        long hours = getHoursBetween(minTime, maxTime);
+        return hours == 0 ? 0 : (double) humanRequests / hours;
     }
 
-    // Метод для несуществующих страниц
-    public HashSet<String> getNonExistingPages() {
-        return new HashSet<>(nonExistingPages);
+    // Метод 2: Среднее количество ошибочных запросов в час
+    public double getAverageErrorRatePerHour() {
+        long hours = getHoursBetween(minTime, maxTime);
+        return hours == 0 ? 0 : (double) errorRequests / hours;
     }
 
-    // Метод для статистики ОС (оставлен без изменений)
-    public HashMap<String, Double> getOsStatistics() {
-        HashMap<String, Double> osStats = new HashMap<>();
-        int totalOs = osCounts.values().stream().mapToInt(Integer::intValue).sum();
-        if (totalOs == 0) return osStats;
-        osCounts.forEach((os, count) -> osStats.put(os, (double) count / totalOs));
-        return osStats;
+    // Метод 3: Средняя посещаемость одним пользователем
+    public double getAverageVisitsPerUser() {
+        if (humanIPs.isEmpty()) return 0;
+        return (double) humanRequests / humanIPs.size();
     }
 
-    // Метод для статистики браузеров
-    public HashMap<String, Double> getBrowserStatistics() {
-        HashMap<String, Double> browserStats = new HashMap<>();
-        int totalBrowsers = browserCounts.values().stream().mapToInt(Integer::intValue).sum();
-        if (totalBrowsers == 0) return browserStats;
-        browserCounts.forEach((browser, count) ->
-                browserStats.put(browser, (double) count / totalBrowsers)
-        );
-        return browserStats;
+    // Вспомогательный метод для вычисления часов
+    private long getHoursBetween(LocalDateTime start, LocalDateTime end) {
+        if (start == null || end == null || start.isAfter(end)) return 0;
+        return Duration.between(start, end).toHours();
     }
+
 
     public double getTrafficRate() {
         if (minTime == null || maxTime == null || minTime.equals(maxTime)) {
