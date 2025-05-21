@@ -1,4 +1,4 @@
-// #10_Задание_1_Курсовая Statistics
+// #10_Задание_2_Курсовая Statistics
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -12,16 +12,25 @@ public class Statistics {
     private long totalTraffic = 0;
     private LocalDateTime minTime = null;
     private LocalDateTime maxTime = null;
+
+    // Для существующих страниц (200)
     private final HashSet<String> existingPages = new HashSet<>();
+    // Для несуществующих страниц (404)
+    private final HashSet<String> nonExistingPages = new HashSet<>();
+    // Для статистики ОС
     private final HashMap<String, Integer> osCounts = new HashMap<>();
+    // Для статистики браузеров
+    private final HashMap<String, Integer> browserCounts = new HashMap<>();
 
     public void addEntry(LogEntry entry) {
         totalRequests++;
         totalTraffic += entry.getDataSize();
 
-        // Добавление страницы с кодом 200
+        // Обработка страниц
         if (entry.getResponseCode() == 200) {
             existingPages.add(entry.getPath());
+        } else if (entry.getResponseCode() == 404) {
+            nonExistingPages.add(entry.getPath());
         }
 
         // Обновление временных границ
@@ -32,10 +41,13 @@ public class Statistics {
             maxTime = entry.getTime();
         }
 
-        // Обновление статистики ОС
+        // Обновление статистики ОС и браузеров
         UserAgent userAgent = new UserAgent(entry.getUserAgentString());
         String os = userAgent.getOsType();
         osCounts.put(os, osCounts.getOrDefault(os, 0) + 1);
+
+        String browser = userAgent.getBrowser();
+        browserCounts.put(browser, browserCounts.getOrDefault(browser, 0) + 1);
 
         // Определение ботов
         String ua = entry.getUserAgentString();
@@ -49,19 +61,34 @@ public class Statistics {
         }
     }
 
-    // Метод для получения списка существующих страниц
+    // Методы для существующих страниц (оставлены без изменений)
     public HashSet<String> getExistingPages() {
-        return new HashSet<>(existingPages); // Защитная копия
+        return new HashSet<>(existingPages);
     }
 
-    // Метод для статистики ОС
+    // Метод для несуществующих страниц
+    public HashSet<String> getNonExistingPages() {
+        return new HashSet<>(nonExistingPages);
+    }
+
+    // Метод для статистики ОС (оставлен без изменений)
     public HashMap<String, Double> getOsStatistics() {
         HashMap<String, Double> osStats = new HashMap<>();
-        int total = osCounts.values().stream().mapToInt(Integer::intValue).sum();
-        if (total == 0) return osStats;
-
-        osCounts.forEach((os, count) -> osStats.put(os, (double) count / total));
+        int totalOs = osCounts.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalOs == 0) return osStats;
+        osCounts.forEach((os, count) -> osStats.put(os, (double) count / totalOs));
         return osStats;
+    }
+
+    // Метод для статистики браузеров
+    public HashMap<String, Double> getBrowserStatistics() {
+        HashMap<String, Double> browserStats = new HashMap<>();
+        int totalBrowsers = browserCounts.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalBrowsers == 0) return browserStats;
+        browserCounts.forEach((browser, count) ->
+                browserStats.put(browser, (double) count / totalBrowsers)
+        );
+        return browserStats;
     }
 
     public double getTrafficRate() {

@@ -1,9 +1,8 @@
-// #10_Задание_1_КурсоваяMain.java
+// #10_Задание_2_Курсовая Main.java
 
 import java.io.*;
 import java.util.Scanner;
-import java.util.HashMap;
-import java.util.HashSet;
+
 
 
 public class Main {
@@ -63,13 +62,21 @@ public class Main {
                 stats.getGoogleBotRequests(), stats.getGoogleBotPercentage());
         System.out.printf("Средний трафик: %.2f байт/час%n", stats.getTrafficRate());
 
-        // Вывод списка существующих страниц
+        // Вывод существующих страниц
         System.out.println("\nСтраницы с кодом 200:");
         stats.getExistingPages().forEach(page -> System.out.println("- " + page));
-
         // Вывод статистики ОС
         System.out.println("\nДоли операционных систем:");
         stats.getOsStatistics().forEach((os, ratio) ->
                 System.out.printf("%s: %.2f%%%n", os, ratio * 100));
+
+        // Вывод несуществующих страниц
+        System.out.println("\nСтраницы с кодом 404:");
+        stats.getNonExistingPages().forEach(page -> System.out.println("- " + page));
+
+        // Вывод статистики браузеров
+        System.out.println("\nДоли браузеров:");
+        stats.getBrowserStatistics().forEach((browser, ratio) ->
+                System.out.printf("%s: %.2f%%%n", browser, ratio * 100));
     }
 }
