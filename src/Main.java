@@ -1,7 +1,10 @@
-// #9_Задание 3_Курсовая Main.java
+// #10_Задание_1_КурсоваяMain.java
 
 import java.io.*;
 import java.util.Scanner;
+import java.util.HashMap;
+import java.util.HashSet;
+
 
 public class Main {
     public static void main(String[] args) {
@@ -59,5 +62,14 @@ public class Main {
         System.out.printf("Запросов от Googlebot: %d (%.2f%%)%n",
                 stats.getGoogleBotRequests(), stats.getGoogleBotPercentage());
         System.out.printf("Средний трафик: %.2f байт/час%n", stats.getTrafficRate());
+
+        // Вывод списка существующих страниц
+        System.out.println("\nСтраницы с кодом 200:");
+        stats.getExistingPages().forEach(page -> System.out.println("- " + page));
+
+        // Вывод статистики ОС
+        System.out.println("\nДоли операционных систем:");
+        stats.getOsStatistics().forEach((os, ratio) ->
+                System.out.printf("%s: %.2f%%%n", os, ratio * 100));
     }
 }

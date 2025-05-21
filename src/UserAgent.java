@@ -30,7 +30,7 @@ public class UserAgent {
             this.osType = "Linux";
         } else if (ua.contains("android")) {
             this.osType = "Android";
-        } else if (ua.contains("iphone") || ua.contains("ipad")) {
+        } else if (ua.contains("iPhone") || ua.contains("iPad")) {
             this.osType = "iOS";
         } else {
             this.osType = "Unknown";

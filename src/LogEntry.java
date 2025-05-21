@@ -1,4 +1,5 @@
 // #9_Задание 3_Курсовая LogEntry
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;

@@ -1,7 +1,9 @@
-// #9_Задание 3_Курсовая Statistics
+// #10_Задание_1_Курсовая Statistics
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Statistics {
     private int totalRequests = 0;
@@ -10,12 +12,19 @@ public class Statistics {
     private long totalTraffic = 0;
     private LocalDateTime minTime = null;
     private LocalDateTime maxTime = null;
+    private final HashSet<String> existingPages = new HashSet<>();
+    private final HashMap<String, Integer> osCounts = new HashMap<>();
 
     public void addEntry(LogEntry entry) {
         totalRequests++;
         totalTraffic += entry.getDataSize();
 
-        // Обновляем временные границы
+        // Добавление страницы с кодом 200
+        if (entry.getResponseCode() == 200) {
+            existingPages.add(entry.getPath());
+        }
+
+        // Обновление временных границ
         if (minTime == null || entry.getTime().isBefore(minTime)) {
             minTime = entry.getTime();
         }
@@ -23,7 +32,12 @@ public class Statistics {
             maxTime = entry.getTime();
         }
 
-        // Определяем ботов
+        // Обновление статистики ОС
+        UserAgent userAgent = new UserAgent(entry.getUserAgentString());
+        String os = userAgent.getOsType();
+        osCounts.put(os, osCounts.getOrDefault(os, 0) + 1);
+
+        // Определение ботов
         String ua = entry.getUserAgentString();
         if (ua != null) {
             ua = ua.toLowerCase();
@@ -33,6 +47,21 @@ public class Statistics {
                 googleBotRequests++;
             }
         }
+    }
+
+    // Метод для получения списка существующих страниц
+    public HashSet<String> getExistingPages() {
+        return new HashSet<>(existingPages); // Защитная копия
+    }
+
+    // Метод для статистики ОС
+    public HashMap<String, Double> getOsStatistics() {
+        HashMap<String, Double> osStats = new HashMap<>();
+        int total = osCounts.values().stream().mapToInt(Integer::intValue).sum();
+        if (total == 0) return osStats;
+
+        osCounts.forEach((os, count) -> osStats.put(os, (double) count / total));
+        return osStats;
     }
 
     public double getTrafficRate() {
