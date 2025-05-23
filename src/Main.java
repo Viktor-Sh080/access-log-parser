@@ -1,9 +1,8 @@
-// #10_StreamAPI_Задание1_Курсовая Main.java
+// #10_StreamAPI_Задание2_Курсовая Main.java
 
 import java.io.*;
 import java.util.Scanner;
-import java.util.HashMap;
-import java.util.HashSet;
+
 
 
 public class Main {
@@ -80,9 +79,16 @@ public class Main {
         stats.getBrowserStatistics().forEach((browser, ratio) ->
                 System.out.printf("%s: %.2f%%%n", browser, ratio * 100));
 
-        // Новые метрики подсчета
+        //  Метрики подсчета посещений и ошибок
         System.out.printf("Среднее посещений в час: %.2f%n", stats.getAverageVisitsPerHour());
         System.out.printf("Среднее ошибок в час: %.2f%n", stats.getAverageErrorRatePerHour());
         System.out.printf("Средняя посещаемость на пользователя: %.2f%n", stats.getAverageVisitsPerUser());
+
+        // Новые метрики
+        System.out.println("\nПиковая посещаемость в секунду: " + stats.getPeakVisitsPerSecond());
+        System.out.println("\nСсылающиеся домены:");
+        stats.getRefererDomains().forEach(domain -> System.out.println("- " + domain));
+        System.out.println("\nМаксимальная посещаемость одним пользователем: " + stats.getMaxVisitsPerUser());
     }
 }
+
